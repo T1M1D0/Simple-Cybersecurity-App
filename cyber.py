@@ -24,10 +24,10 @@ SECURITY_FACTS = [
 ]
 
 class SecurityToolkit(tk.Tk):
-    """
-    A basic cybersecurity toolkit with a GUI to perform simple port scanning,
-    ARP table checks, and other security-related tasks.
-    """
+    
+    #A basic cybersecurity toolkit with a GUI to perform simple port scanning,
+    #ARP table checks, and other security-related tasks.
+
     def __init__(self):
         super().__init__()
         self.title("Security Toolkit")
@@ -35,7 +35,7 @@ class SecurityToolkit(tk.Tk):
         self.configure(bg="#2c3e50")
         self.create_widgets()
 
-        # Initialize threading queue
+        # Start threading
         self.scan_queue = queue.Queue()
 
     def create_widgets(self):
@@ -52,11 +52,11 @@ class SecurityToolkit(tk.Tk):
         main_frame = ttk.Frame(self, padding="20 20 20 20")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Title Label
+        # Title
         title_label = ttk.Label(main_frame, text="Security Toolkit", font=('Helvetica', 20, 'bold'), foreground="#f39c12")
         title_label.pack(pady=(0, 20))
 
-        # Input and Controls Frame
+        # Input and Controls
         controls_frame = ttk.Frame(main_frame, padding="10")
         controls_frame.pack(fill=tk.X, pady=(0, 10))
 
@@ -102,14 +102,14 @@ class SecurityToolkit(tk.Tk):
         self.output_text.config(state=tk.DISABLED)
 
     def log(self, message):
-        """Helper function to append messages to the output text widget."""
+        #Helper function to append messages to the output text widget
         self.output_text.config(state=tk.NORMAL)
         self.output_text.insert(tk.END, f"\n\n{message}")
         self.output_text.see(tk.END)
         self.output_text.config(state=tk.DISABLED)
 
     def start_scan(self):
-        """Validates input and starts the port scanning process in a new thread."""
+        #Validates input and starts the port scanning process in a new thread
         target_ip = self.ip_entry.get()
         port_range_str = self.port_entry.get()
 
@@ -130,7 +130,7 @@ class SecurityToolkit(tk.Tk):
         # Disable buttons to prevent multiple scans
         self.set_buttons_state(tk.DISABLED)
 
-        # Start a new thread for the scan to prevent GUI freeze
+        # Start a new thread to prevent GUI freeze
         thread = threading.Thread(target=self.port_scan_worker, args=(target_ip, start_port, end_port))
         thread.daemon = True
         thread.start()
@@ -139,7 +139,7 @@ class SecurityToolkit(tk.Tk):
         self.poll_queue()
 
     def set_buttons_state(self, state):
-        """Helper function to set the state of all buttons."""
+        #Helper function to set the state of all buttons
         for widget in self.winfo_children():
             if isinstance(widget, ttk.Frame):
                 for sub_widget in widget.winfo_children():
@@ -147,7 +147,7 @@ class SecurityToolkit(tk.Tk):
                         sub_widget.config(state=state)
 
     def port_scan_worker(self, target_ip, start_port, end_port):
-        """Worker thread for port scanning."""
+        #Worker thread for port scanning
         open_ports = []
         for port in range(start_port, end_port + 1):
             try:
@@ -155,7 +155,7 @@ class SecurityToolkit(tk.Tk):
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(1) # Timeout in seconds
 
-                # Attempt to connect to the port
+                # Attempt to connect to port
                 result = sock.connect_ex((target_ip, port))
                 if result == 0:
                     open_ports.append(port)
@@ -164,15 +164,15 @@ class SecurityToolkit(tk.Tk):
                 sock.close()
             except socket.gaierror:
                 self.scan_queue.put(f"Error: Hostname could not be resolved for {target_ip}. Stopping scan.")
-                break # Break the loop, as subsequent ports will also fail
+                break
             except socket.error:
-                # Log the error but continue to the next port
+                # Log the error
                 self.scan_queue.put(f"Connection error on port {port}. Continuing scan.")
         
         self.scan_queue.put("Scan finished.")
 
     def poll_queue(self):
-        """Polls the queue for results from the port scan worker thread."""
+        #Polls the queue for results from the port scan worker thread
         try:
             while not self.scan_queue.empty():
                 message = self.scan_queue.get(block=False)
@@ -182,14 +182,15 @@ class SecurityToolkit(tk.Tk):
                     return
         except queue.Empty:
             pass
-        self.after(100, self.poll_queue) # Check again in 100ms
+        self.after(100, self.poll_queue)
+        # Check again in 100ms
 
     def find_and_close_port(self):
-        """
-        Finds the process listening on a given port and provides instructions to close it.
-        This is a demonstration of how to implement the "port closer" functionality.
-        It does not automatically kill the process.
-        """
+        
+        #Finds the process listening on a given port and provides instructions to close it
+        #This is a demonstration of how to implement the "port closer" functionality
+        #It does not automatically kill the process
+        
         port_to_close = self.close_port_entry.get().strip()
         if not port_to_close.isdigit():
             self.log("Error: Please enter a valid port number.")
@@ -293,10 +294,9 @@ class SecurityToolkit(tk.Tk):
             self.log("Error: 'arp' command not found. Please ensure it's in your system's PATH.")
     
     def check_privilege_escalation(self):
-        """
-        Performs a basic, educational check for common privilege escalation vectors.
-        This is a very simple check and not a comprehensive security audit.
-        """
+        #Performs a basic, educational check for common privilege escalation vectors.
+        #This is a very simple check and not a comprehensive security audit.
+
         self.log("Performing a basic check for potential privilege escalation vectors...")
         
         # Check for SUID/SGID files (Linux/macOS)
@@ -320,7 +320,7 @@ class SecurityToolkit(tk.Tk):
             self.log("SUID/SGID checks are not applicable to Windows. Checking for common vulnerabilities instead.")
             self.log("On Windows, common privilege escalation vectors include unquoted service paths and weak service permissions.")
             
-            # Simple check for weak folder permissions (e.g., world-writable)
+            # Simple check for weak folder permissions
             self.log("\nChecking C:\\ directory permissions...")
             try:
                 output = subprocess.check_output('icacls "C:\\"', shell=True, text=True)
@@ -336,7 +336,7 @@ class SecurityToolkit(tk.Tk):
 
 
     def display_fact(self):
-        """Displays a random security fact."""
+        #Displays a random security fact
         fact = random.choice(SECURITY_FACTS)
         self.log(f"--- Security Fact ---\n{fact}")
 
